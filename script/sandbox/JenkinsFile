@@ -1,0 +1,19 @@
+pipeline {
+    agent any  // 任意のエージェントで実行
+
+    stages {
+        stage('Generate File') {
+            steps {
+                script {
+                    sh 'echo "Hello, tee" | tee output.txt'
+                }
+            }
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                archiveArtifacts artifacts: 'output.txt', fingerprint: true
+            }
+        }
+    }
+}
