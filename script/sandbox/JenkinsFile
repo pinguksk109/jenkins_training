@@ -1,18 +1,30 @@
 pipeline {
     agent any  // 任意のエージェントで実行
 
+    parameters {
+        string(name: 'QUEUE_URL', description: 'SQSのURLを入力してください')
+    }
+    
     stages {
-        stage('Generate File') {
+        stage('Fetch SQS Messages') {
             steps {
                 script {
-                    sh 'echo "Hello, tee" | tee output.txt'
+                    // AWS CLI を使って SQS のメッセージを取得（削除しない）
+                    def sqsOutput = sh(script: "aws sqs receive-message --queue-url ${QUEUE_URL} --max-number-of-messages 10", returnStdout: true).trim()
+
+                    // メッセージを Markdown 形式に整形
+                    def markdownContent = "# SQS Messages\n\n"
+                    markdownContent += "```\n${sqsOutput}\n```\n"
+
+                    // ファイルとして保存
+                    writeFile file: 'output.md', text: markdownContent
                 }
             }
         }
 
         stage('Archive Artifacts') {
             steps {
-                archiveArtifacts artifacts: 'output.txt', fingerprint: true
+                archiveArtifacts artifacts: 'output.md', fingerprint: true
             }
         }
     }
