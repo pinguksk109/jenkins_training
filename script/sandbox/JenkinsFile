@@ -4,14 +4,14 @@ pipeline {
     parameters {
         string(name: 'QUEUE_URL', description: 'SQSのURLを入力してください')
     }
-    
+
     stages {
         stage('Fetch SQS Messages') {
             steps {
                 script {
                     // AWS CLI を使って SQS のメッセージを取得（削除しない）
                     def sqsOutput = sh(script: "aws sqs receive-message --queue-url ${QUEUE_URL} --max-number-of-messages 10", returnStdout: true).trim()
-
+                    echo "SQS Messages:\n${sqsOutput}"
                     // メッセージを Markdown 形式に整形
                     def markdownContent = "# SQS Messages\n\n"
                     markdownContent += "```\n${sqsOutput}\n```\n"
